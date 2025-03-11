@@ -105,36 +105,84 @@ const questions = [
   
   function allowDrop(event) {
     event.preventDefault();
-  }
-  
-  function drag(event) {
-    event.dataTransfer.setData("text", event.target.innerText);
+}
+
+function drag(event) {
+    event.dataTransfer?.setData("text", event.target.innerText);
     event.target.classList.add("dragging");
-  }
-  
-  function drop(event) {
+}
+
+// Función para soltar en PC
+function drop(event) {
     event.preventDefault();
     const letter = event.dataTransfer.getData("text");
+    addLetterToDropZone(letter);
+}
+
+// Para móviles: Detectar el toque y mover el elemento
+document.querySelectorAll(".letter").forEach(letter => {
+    letter.addEventListener("touchstart", touchStart);
+    letter.addEventListener("touchmove", touchMove);
+    letter.addEventListener("touchend", touchEnd);
+});
+
+let selectedLetter = null;
+
+// Cuando el usuario toca una letra
+function touchStart(event) {
+    selectedLetter = event.target;
+    selectedLetter.classList.add("dragging");
+}
+
+// Cuando el usuario mueve el dedo
+function touchMove(event) {
+    if (!selectedLetter) return;
+    event.preventDefault(); // Evita el desplazamiento de la pantalla
+    let touch = event.touches[0];
+    selectedLetter.style.position = "absolute";
+    selectedLetter.style.left = touch.pageX + "px";
+    selectedLetter.style.top = touch.pageY + "px";
+}
+
+// Cuando el usuario suelta la letra
+function touchEnd(event) {
+    if (!selectedLetter) return;
+    selectedLetter.classList.remove("dragging");
+
+    let dropZone = document.getElementById("drop-zone");
+    let touch = event.changedTouches[0];
+    let dropZoneRect = dropZone.getBoundingClientRect();
+
+    // Verifica si el toque fue dentro del área de soltar
+    if (
+        touch.pageX >= dropZoneRect.left &&
+        touch.pageX <= dropZoneRect.right &&
+        touch.pageY >= dropZoneRect.top &&
+        touch.pageY <= dropZoneRect.bottom
+    ) {
+        addLetterToDropZone(selectedLetter.innerText);
+        selectedLetter.remove();
+    }
+    selectedLetter = null;
+}
+
+// Agregar la letra a la zona de soltar
+function addLetterToDropZone(letter) {
     const dropZone = document.getElementById("drop-zone");
-  
+
     const existingLetter = document.querySelector(`.letter[data-letter="${letter}"]`);
     if (existingLetter) {
-      dropZone.appendChild(existingLetter);
+        dropZone.appendChild(existingLetter);
     } else {
-      const span = document.createElement("span");
-      span.classList.add("letter");
-      span.draggable = true;
-      span.innerText = letter;
-      span.setAttribute("data-letter", letter);
-      span.ondragstart = drag;
-      dropZone.appendChild(span);
+        const span = document.createElement("span");
+        span.classList.add("letter");
+        span.draggable = true;
+        span.innerText = letter;
+        span.setAttribute("data-letter", letter);
+        span.ondragstart = drag;
+        dropZone.appendChild(span);
     }
-  }
-  
-  function resetDropZone() {
-    const dropZone = document.getElementById("drop-zone");
-    dropZone.innerHTML = "";
-  }
+}
   
   // Verificar si el mensaje es correcto
   function checkMessage() {
@@ -156,7 +204,7 @@ const questions = [
   function showLoveMessage() {
     quizContent.innerHTML = `
       <h2>Felicidades mi amor! ❤️</h2>
-      <p style="font-size: 1.8em;">Aunque no es secreto que te amo, quise hacerte este detalle como la novia programadora que tienes.</p>
+      <p style="font-size: 1.8em;">Aunque no es secreto que te amo, quise hacerte este detalle como la novia programadora que tienes 💅🏻.</p>
       <p style="font-size: 1.2em;">Espero que te haya gustado porque duré toda la tarde haciéndolo 🤣❤️</p>
       <p style="font-size: 2.2em;">❤️ TE AMO ❤️</p>
     `;
